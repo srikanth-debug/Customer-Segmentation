@@ -9,6 +9,8 @@ load_dotenv()  # only needed locally
 
 app = FastAPI(title="MLflow Model API", version="1.0")
 
+
+
 MODEL_URI = os.getenv("MODEL_URI", "models:/MyModel/Production")
 model = None
 try:
@@ -17,8 +19,10 @@ except Exception as e:
     logging.error(f"Failed to load MLflow model at {MODEL_URI}: {e}")
 
 class PredictionRequest(BaseModel):
-    feature1: float
-    feature2: float
+    Frequency : float
+    Monetary : float
+    Tenure : float
+    AvgOrderValue : float
     # Add other features here
 
 @app.post("/predict")
@@ -26,7 +30,7 @@ def predict(request: PredictionRequest):
     if model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
     try:
-        data = [[request.feature1, request.feature2]]  # match your model input
+        data = [[request.Frequency, request.Monetary, request.Tenure, request.AvgOrderValue]]  # match your model input
         prediction = model.predict(data)
         return {"prediction": prediction.tolist()}
     except Exception as e:
