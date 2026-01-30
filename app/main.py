@@ -1,31 +1,30 @@
 from fastapi import FastAPI, HTTPException
-import mlflow.pyfunc
 from pydantic import BaseModel
+import mlflow.pyfunc
 import os
-
-# --- Load environment variables ---
+import logging
 from dotenv import load_dotenv
-load_dotenv()
 
-# --- Initialize FastAPI ---
+load_dotenv()  # only needed locally
+
 app = FastAPI(title="MLflow Model API", version="1.0")
 
-# --- Load model once at startup ---
 MODEL_URI = os.getenv("MODEL_URI", "models:/MyModel/Production")
+model = None
 try:
     model = mlflow.pyfunc.load_model(MODEL_URI)
 except Exception as e:
-    raise RuntimeError(f"Failed to load MLflow model: {e}")
+    logging.error(f"Failed to load MLflow model at {MODEL_URI}: {e}")
 
-# --- Request schema ---
 class PredictionRequest(BaseModel):
     feature1: float
     feature2: float
-    # Add your features here
+    # Add other features here
 
-# --- Prediction endpoint ---
 @app.post("/predict")
 def predict(request: PredictionRequest):
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
     try:
         data = [[request.feature1, request.feature2]]  # match your model input
         prediction = model.predict(data)
@@ -33,7 +32,6 @@ def predict(request: PredictionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- Health check endpoint ---
 @app.get("/health")
 def health():
     return {"status": "ok"}
