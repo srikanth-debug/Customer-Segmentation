@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# MLflow / model artifacts
+mlruns/
+mlflow.db
+*.joblib
+*.h5
+*.pt
+*.ckpt
+
+# Conda / venv
+.env/
+venv/
+
+# Data
+data/
+*.csv
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Logs
+logs/
+*.log
