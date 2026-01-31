@@ -32,12 +32,26 @@ def root():
 def predict(request: PredictionRequest):
     if model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
+    data =[[
+        request.Frequency,
+        request.Monetary,
+        request.Tenure,
+        request.AvgOrderValue
+    ]]
+    pred = model.pred(data)[0]
     try:
-        data = [[request.Frequency, request.Monetary, request.Tenure, request.AvgOrderValue]]  # match your model input
-        prediction = model.predict(data)
-        return {"prediction": prediction.tolist()}
+        prediction = model.predict_proba(data)[0][1]
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        prob = None
+
+    return {
+        "churn_prediction": int(pred),
+        "risk_level": "HIGH" if pred == 1 else "LOW",
+        "probability": prob,
+        "business_action":
+            "Send retention offer" if pred == 1 else "No action needed"
+    }
+    
 
 @app.get("/health")
 def health():
