@@ -30,27 +30,34 @@ def root():
 
 @app.post("/predict")
 def predict(request: PredictionRequest):
+
     if model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
-    data =[[
-        request.Frequency,
-        request.Monetary,
-        request.Tenure,
-        request.AvgOrderValue
-    ]]
-    pred = model.pred(data)[0]
-    try:
-        prediction = model.predict_proba(data)[0][1]
-    except Exception as e:
-        prob = None
 
-    return {
-        "churn_prediction": int(pred),
-        "risk_level": "HIGH" if pred == 1 else "LOW",
-        "probability": prob,
-        "business_action":
-            "Send retention offer" if pred == 1 else "No action needed"
-    }
+    try:
+        # Convert request → dataframe (pyfunc prefers dataframe)
+        data = {
+            "Frequency": [request.Frequency],
+            "Monetary": [request.Monetary],
+            "Tenure": [request.Tenure],
+            "AvgOrderValue": [request.AvgOrderValue]
+        }
+
+        import pandas as pd
+        df = pd.DataFrame(data)
+
+        pred = model.predict(df)[0]
+
+        return {
+            "churn_prediction": int(pred),
+            "risk_level": "HIGH" if pred == 1 else "LOW",
+            "business_action":
+                "Send retention offer" if pred == 1 else "No action needed"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
     
 
 @app.get("/health")
