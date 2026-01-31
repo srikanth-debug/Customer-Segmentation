@@ -48,11 +48,40 @@ def predict(request: PredictionRequest):
 
         pred = model.predict(df)[0]
 
+        #***---Buisness-layer logic***
+        customer_value = request.Monetary
+        freq = request.Frequency
+
+        if customer_value > 500:
+            value_tier = "HIGH_VALUE"
+        elif customer_value > 200:
+            value_tier = "MID_VALUE"
+        else:
+            value_tier = "LOW_VALUE"
+
+        if pred == 1 and value_tier == "HIGH_VALUE":
+            action = "Immediate retention campaign"
+            discount = "20%"
+        elif pred == 1:
+            action = "Send retention offer"
+            discount = "10%"
+        else:
+            action = "No action required"
+            discount = "0%"
+
+        explanation = (
+            f"Customer shows churn risk based on purchase freequency"
+            f"({freq}) and total spend ({customer_value})"
+        )                     
+
         return {
             "churn_prediction": int(pred),
             "risk_level": "HIGH" if pred == 1 else "LOW",
-            "business_action":
-                "Send retention offer" if pred == 1 else "No action needed"
+            "customer_value_tier" : value_tier,
+            "recommonded_action": action,
+            "suggested_discount" : discount,
+            "explanation" : explanation
+    
         }
 
     except Exception as e:
