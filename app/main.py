@@ -24,33 +24,6 @@ class PredictionRequest(BaseModel):
     AvgOrderValue : float
     # Add other features here
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import mlflow.pyfunc
-import os
-import logging
-from dotenv import load_dotenv
-
-load_dotenv()  # only needed locally
-
-app = FastAPI(title="MLflow Model API", version="1.0")
-
-
-
-MODEL_URI = os.getenv("MODEL_URI", "models:/MyModel/Production")
-model = None
-try:
-    model = mlflow.pyfunc.load_model(MODEL_URI)
-except Exception as e:
-    logging.error(f"Failed to load MLflow model at {MODEL_URI}: {e}")
-
-class PredictionRequest(BaseModel):
-    Frequency : float
-    Monetary : float
-    Tenure : float
-    AvgOrderValue : float
-    # Add other features here
-
 @app.get("/")
 def root():
     return {"message" : "API running"}
